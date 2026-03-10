@@ -1,0 +1,41 @@
+name: Bug Report
+description: Something isn't working as expected
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: What did you ask the factory to build? Which phase failed?
+      placeholder: |
+        1. Asked for an agent that...
+        2. During the [phase] phase...
+        3. The factory did/said...
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Which phase?
+      options:
+        - Classify
+        - Interview
+        - Research
+        - Design
+        - Build
+        - Validate
+        - Deliver
+        - Other / Not sure
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Error messages, screenshots, or other relevant information.

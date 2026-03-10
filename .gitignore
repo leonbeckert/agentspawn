@@ -1,0 +1,15 @@
+# Generated agents (each user creates their own)
+generated-agents/*/
+!generated-agents/.gitkeep
+
+# Agent memory (personal, created during use)
+.claude/agent-memory/
+
+# Session memory content (personal, created during use)
+.claude/memory/sessions/*.md
+!.claude/memory/sessions/.gitkeep
+.claude/memory/topics/*.md
+!.claude/memory/topics/.gitkeep
+
+# OS
+.DS_Store

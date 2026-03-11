@@ -18,7 +18,7 @@ When the user asks for an agent, follow these phases in order. Each phase has a 
 
 Two gates are enforced by hooks — you will be blocked if you try to skip them:
 
-- **Design before build.** You cannot write agent files until `design-brief.md` exists in the agent directory. Complete the design phase and get user approval first.
+- **Design before build.** You cannot write agent files until `design-brief.md` exists AND the user has explicitly approved it. After user approval, create `.design-approved` in the agent directory to unlock the build phase. The hook checks for both files.
 - **Evals before delivery.** You cannot write delivery artifacts until eval results exist.
 
 Additionally, `/build` and `/deliver` require the user to invoke them manually. You cannot auto-invoke these skills.

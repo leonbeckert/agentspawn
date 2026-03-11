@@ -2,7 +2,7 @@
 name: evaluator
 description: Evaluation agent for testing generated agents. Simulates test cases from the eval suite, scores outputs, and reports results. Use during the validate phase.
 disallowedTools: Write, Edit, NotebookEdit, WebSearch, WebFetch
-model: inherit
+model: opus
 permissionMode: dontAsk
 memory: project
 maxTurns: 40

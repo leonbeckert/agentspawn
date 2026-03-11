@@ -2,7 +2,7 @@
 name: researcher
 description: Research agent for gathering domain knowledge during the agentspawn research phase. Use to investigate market data, best practices, regulations, competitor analysis, and public sources in parallel.
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: opus
 memory: project
 background: true
 maxTurns: 30

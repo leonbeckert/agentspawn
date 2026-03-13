@@ -8,6 +8,10 @@ disable-model-invocation: true
 
 Present the completed agent to the user. This skill requires manual invocation because delivery should only happen after validation passes.
 
+**Tier awareness:**
+- **Tier 1:** Skip README.md. Generate only MAINTENANCE.md (abbreviated — just the observability signals table and mistake-handling workflow). Keep the delivery presentation conversational and brief.
+- **Tier 2+:** Full delivery as described below.
+
 **Before starting:** Verify that `generated-agents/[agent-name]/evals/test-cases.md` exists and contains passing results. If not, tell the user to run /validate first.
 
 ## Delivery Presentation
@@ -140,7 +144,7 @@ Tell the user based on deployment target:
 
 **Multi-project subagent:**
 - Run `deploy.sh` to create symlinks in all target projects
-- The source of truth is `generated-agents/[agent-name]/` — edit there, symlinks propagate
+- The source of truth is `generated-agents/[agent-name]/` — edit there, then re-run `deploy.sh` to update target projects
 - To add a new target project: add its path to `deploy.sh` and re-run
 - To remove from a project: delete the symlinks in that project's `.claude/` directory
 - Review MAINTENANCE.md for ongoing care

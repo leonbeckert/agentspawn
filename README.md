@@ -87,7 +87,7 @@ agentspawn/
 │   │   ├── classify/    interview/    research/    design/
 │   │   └── build/       validate/     deliver/     memory-recall/
 │   ├── agents/
-│   │   ├── researcher.md                     # Background research (Sonnet, read-only)
+│   │   ├── researcher.md                     # Background research (Opus, read-only)
 │   │   └── evaluator.md                      # Eval execution (autonomous, isolated)
 │   └── hooks/
 │       ├── require-design-brief.sh           # Gate: design before build

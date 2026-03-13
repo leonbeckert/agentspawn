@@ -29,4 +29,10 @@ if [[ ! -f "${AGENT_DIR}evals/test-cases.md" ]]; then
   exit 2
 fi
 
+# Block if test-cases.md has no actual results (just definitions isn't enough)
+if ! grep -qiE '(PASS|FAIL)' "${AGENT_DIR}evals/test-cases.md"; then
+  echo "Blocked: ${AGENT_DIR}evals/test-cases.md exists but contains no PASS/FAIL results. Run /validate before /deliver." >&2
+  exit 2
+fi
+
 exit 0

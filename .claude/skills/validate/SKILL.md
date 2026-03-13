@@ -83,4 +83,12 @@ Fix the root cause in the responsible phase, rebuild forward, and re-validate.
 
 ## Output
 
-Write eval results to `generated-agents/[agent-name]/evals/test-cases.md` (update the existing file with results). Summarize pass/fail status for the user.
+The evaluator agent reports results back to you. You (the parent agent) then update `generated-agents/[agent-name]/evals/test-cases.md` with the results, appending a `## Results` section with PASS/FAIL outcomes. Summarize pass/fail status for the user.
+
+## Next Step
+
+When all tests pass, tell the user:
+
+> Validation passed. Run `/deliver` to generate usage instructions, maintenance model, and README.
+
+For Tier 1 agents, add: "For this Tier 1 agent, `/deliver` is optional — the agent is ready to use."

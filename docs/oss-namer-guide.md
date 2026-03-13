@@ -1,1 +1,0 @@
-/Users/leonbeckert/AI/agent-factory/generated-agents/oss-namer/docs/oss-namer-guide.md

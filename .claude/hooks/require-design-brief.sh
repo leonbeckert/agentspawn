@@ -52,12 +52,25 @@ if [[ "$FILE_PATH" == *"generated-agents/"* ]]; then
 fi
 
 # For .claude/agents/ or .claude/skills/ paths (project/user subagent deployment),
-# check if a design-approved sentinel exists in generated-agents/
+# find which agent is actively being built and check its specific approval.
 if [[ "$FILE_PATH" == *".claude/agents/"* ]] || [[ "$FILE_PATH" == *".claude/skills/"* ]]; then
-  APPROVED=$(find "$CLAUDE_PROJECT_DIR/generated-agents" -name ".design-approved" 2>/dev/null)
-  if [[ -z "$APPROVED" ]]; then
-    echo "Blocked: No approved design brief found in generated-agents/. Complete the design phase and get user approval before writing agent files." >&2
-    exit 2
+  # Look for a .building marker that identifies the active agent
+  BUILDING_MARKER=$(find "$CLAUDE_PROJECT_DIR/generated-agents" -maxdepth 2 -name ".building" 2>/dev/null | head -1)
+  if [[ -n "$BUILDING_MARKER" ]]; then
+    # Scope check to the specific agent being built
+    AGENT_DIR=$(dirname "$BUILDING_MARKER")/
+    if [[ ! -f "${AGENT_DIR}.design-approved" ]]; then
+      AGENT_NAME=$(basename "$(dirname "$BUILDING_MARKER")")
+      echo "Blocked: Agent '$AGENT_NAME' is being built but has no approved design brief. Complete the design phase and get user approval before writing agent files." >&2
+      exit 2
+    fi
+  else
+    # No .building marker — fall back to requiring any approval (backward compatibility)
+    APPROVED=$(find "$CLAUDE_PROJECT_DIR/generated-agents" -maxdepth 2 -name ".design-approved" 2>/dev/null)
+    if [[ -z "$APPROVED" ]]; then
+      echo "Blocked: No approved design brief found in generated-agents/. Complete the design phase and get user approval before writing agent files." >&2
+      exit 2
+    fi
   fi
 fi
 

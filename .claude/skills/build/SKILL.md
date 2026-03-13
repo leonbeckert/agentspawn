@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Write the agent files. This skill requires manual invocation because building should only happen after the user approves the design brief.
 
-**Before starting:** Read the design brief to confirm it exists and review the approved plan. Check the **Deployment Target** section to determine which output format to use. Read templates from `templates/` for scaffolding.
+**Before starting:** Read the design brief to confirm it exists and review the approved plan. Check the **Deployment Target** section to determine which output format to use. Read templates from `templates/` for scaffolding. Create a `.building` marker file in `generated-agents/[agent-name]/` (write the agent name as its content). This marker scopes the design gate for subagent deployments. Remove it when the build phase completes.
 
 ## Deployment Targets
 
@@ -125,8 +125,8 @@ The agent is needed in 2+ specific projects but not all projects. Build once, sy
 
 ```bash
 #!/bin/bash
-# Deploy [agent-name] to target projects via symlinks.
-# Source of truth: this directory. Symlinks ensure updates propagate automatically.
+# Deploy [agent-name] to target projects.
+# Source of truth: this directory. Re-run after editing source files.
 AGENT_DIR="$(cd "$(dirname "$0")" && pwd)"
 AGENT_NAME="[agent-name]"
 
@@ -136,18 +136,19 @@ TARGETS=(
 )
 
 for PROJECT in "${TARGETS[@]}"; do
-  # Agent definition
+  # Agent definition (cp because Claude Code may not follow symlinks for discovery)
   mkdir -p "$PROJECT/.claude/agents"
-  ln -sf "$AGENT_DIR/.claude/agents/$AGENT_NAME.md" "$PROJECT/.claude/agents/$AGENT_NAME.md"
+  cp -f "$AGENT_DIR/.claude/agents/$AGENT_NAME.md" "$PROJECT/.claude/agents/$AGENT_NAME.md"
 
-  # Skills (symlink each skill directory)
+  # Skills (cp each skill directory)
   mkdir -p "$PROJECT/.claude/skills"
   for SKILL_DIR in "$AGENT_DIR/.claude/skills/$AGENT_NAME-"*/; do
     SKILL_NAME=$(basename "$SKILL_DIR")
-    ln -sf "$SKILL_DIR" "$PROJECT/.claude/skills/$SKILL_NAME"
+    mkdir -p "$PROJECT/.claude/skills/$SKILL_NAME"
+    cp -f "$SKILL_DIR"* "$PROJECT/.claude/skills/$SKILL_NAME/"
   done
 
-  # Knowledge base (if exists)
+  # Knowledge base (symlink is fine for docs — Claude reads these via file paths)
   if [[ -d "$AGENT_DIR/docs" ]]; then
     mkdir -p "$PROJECT/docs"
     for DOC in "$AGENT_DIR/docs/$AGENT_NAME-"*; do
@@ -162,11 +163,11 @@ done
 **Step 3:** Populate the `TARGETS` array with the project paths from the design brief. Make the script executable.
 
 **Key properties:**
-- Single source of truth in `generated-agents/` — edits propagate via symlinks
+- Single source of truth in `generated-agents/` — re-run `deploy.sh` after editing source files
 - Zero context cost in projects not listed as targets
 - Each target project sees the agent in `/agents` as if it were a native project subagent
-- The `deploy.sh` script is re-runnable (idempotent via `ln -sf`)
-- To remove from a project: delete the symlinks
+- The `deploy.sh` script is re-runnable (idempotent via `cp -f` / `ln -sf`)
+- To remove from a project: delete the copied/symlinked files
 
 **File layout in `generated-agents/`:**
 

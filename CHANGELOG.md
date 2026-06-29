@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Update checker (`check-for-updates.sh` SessionStart hook) — notifies when the checkout is behind `origin/main`, with opt-in auto fast-forward via `AGENTSPAWN_AUTO_UPDATE=1`. Network fetch runs detached on a 6h timer so it never blocks session start; the "behind" count is recomputed from local refs each session; auto-apply is guarded by a clean tree + true fast-forward, and it fails open when offline or off `main`
 - README **Setup** section documenting prerequisites: Claude Code (required) and Playwright MCP (recommended, with install commands) so agents have browser tools for blocked/JS-rendered sites
 - README **Troubleshooting** section — most issues are fixable by asking Claude Code to read and repair its own skills/hooks/scripts in-session, with example prompts and a pointer to `claude doctor` / the official troubleshooting guide for Claude Code itself
 - README **Install Claude Code** table covering all install methods — native installer (macOS/Linux/WSL/Windows), Homebrew, npm, WinGet, Linux package managers, and the Desktop app — each with the exact command and a link to the official guide, plus the plan/account requirement

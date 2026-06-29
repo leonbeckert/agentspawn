@@ -69,6 +69,20 @@ extra configuration. Optionally, add a one-click [Dock launcher](#dock-launcher-
 scripts/make-launcher.sh AgentSpawn "$(pwd)"
 ```
 
+### Staying updated
+
+A SessionStart hook checks whether your checkout is behind `origin/main` and, if so,
+prints a one-line notice — e.g. _"agentspawn is 3 commit(s) behind origin/main — run
+`git pull --ff-only`"_. The check is non-blocking: the network fetch runs detached in
+the background (at most once every 6h), so it never slows down or hangs session start,
+and it fails silently when offline or off `main`.
+
+To update, run `git pull --ff-only`. To have agentspawn fast-forward **automatically**
+when it's safe, set `AGENTSPAWN_AUTO_UPDATE=1`. Auto-apply only happens on a clean
+working tree and a true fast-forward — so it won't clobber local changes or your
+generated agents and memory. (Because the memory system writes on most sessions, the
+tree is often dirty and it simply falls back to the notice.)
+
 ## Pipeline
 
 | Phase | What | Your role |
@@ -147,6 +161,7 @@ agentspawn/
 │       ├── require-evals-before-delivery.sh  # Gate: evals before delivery
 │       ├── check-user-level-budget.sh        # Context budget guard
 │       ├── nudge-build-not-solve.sh          # Nudge: build agents, don't solve directly
+│       ├── check-for-updates.sh              # Notify (opt-in auto-FF) when behind origin/main
 │       ├── session-start-memory.sh           # Cross-session memory injection
 │       └── pre-compact-backup.sh             # Memory persistence before compaction
 ├── templates/                                # Scaffolding for generated agent files

@@ -6,15 +6,67 @@ You describe what you need. agentspawn runs the full pipeline: classifies the ag
 
 Two phases are gate-enforced by shell hooks — the system cannot write agent files without an approved design brief, and cannot deliver without passing evals.
 
-## Usage
+## Setup
+
+### Prerequisites
+
+- **[Claude Code](https://code.claude.com/docs/en/setup)** (required) — agentspawn
+  runs entirely inside Claude Code. Install it with whichever method fits your
+  platform (see below), then sign in. Claude Code needs a Claude **Pro, Max, Team,
+  or Enterprise** plan or an **API/Console** account — the free Claude.ai plan does
+  not include it.
+- **Playwright MCP** (recommended) — gives generated agents (and the research
+  phase) a real browser, so they can read JavaScript-rendered pages, dismiss
+  cookie banners, and reach sites that block plain HTTP fetches. Without it,
+  agents fall back to `WebFetch`, which fails on many modern sites.
+- **macOS** — only required for the optional [Dock launcher](#dock-launcher-macos).
+
+### Install Claude Code
+
+Pick one method ([full install guide](https://code.claude.com/docs/en/setup)):
+
+| Method | Platform | Command |
+|---|---|---|
+| **Native installer** (recommended) | macOS / Linux / WSL | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| **Native installer** | Windows PowerShell | `irm https://claude.ai/install.ps1 \| iex` |
+| **Homebrew** | macOS / Linux | `brew install --cask claude-code` |
+| **npm** (needs [Node 18+](https://nodejs.org/en/download)) | cross-platform | `npm install -g @anthropic-ai/claude-code` |
+| **WinGet** | Windows | `winget install Anthropic.ClaudeCode` |
+| **apt / dnf / apk** | Debian / Fedora / Alpine | [Linux package managers](https://code.claude.com/docs/en/setup#install-with-linux-package-managers) |
+| **Desktop app** (GUI, no terminal) | macOS / Windows | [Download](https://code.claude.com/docs/en/desktop-quickstart) |
+
+Then sign in by running `claude` and following the browser prompt. Verify with
+`claude --version` or `claude doctor`.
+
+### Add the Playwright browser tools (recommended)
 
 ```bash
+claude mcp add playwright npx @playwright/mcp@latest
+```
+
+The server downloads its browser on first use. Restart Claude Code afterward so
+the new tools load.
+
+### Install agentspawn
+
+```bash
+git clone https://github.com/leonbeckert/agentspawn.git
 cd agentspawn
 claude
 ```
 
+Then describe what you need:
+
 ```
 > I need an agent that [your use case]
+```
+
+agentspawn ships sensible session defaults (Opus subagents, large auto-compact
+window) via `.claude/settings.json`, so every user gets the same behavior with no
+extra configuration. Optionally, add a one-click [Dock launcher](#dock-launcher-macos):
+
+```bash
+scripts/make-launcher.sh AgentSpawn "$(pwd)"
 ```
 
 ## Pipeline
@@ -38,6 +90,7 @@ Shell hooks intercept tool calls and enforce phase ordering at runtime:
 | `require-design-brief.sh` | Blocks writes to agent directories unless `design-brief.md` exists |
 | `require-evals-before-delivery.sh` | Blocks delivery artifacts unless eval results exist |
 | `check-user-level-budget.sh` | Warns at 5, blocks at 10 user-level agents (context budget guard) |
+| `nudge-build-not-solve.sh` | One-time per-session reminder on web research — build an agent, don't solve the problem directly |
 
 `/build` and `/deliver` require manual invocation — the system cannot auto-invoke them.
 
@@ -93,16 +146,89 @@ agentspawn/
 │       ├── require-design-brief.sh           # Gate: design before build
 │       ├── require-evals-before-delivery.sh  # Gate: evals before delivery
 │       ├── check-user-level-budget.sh        # Context budget guard
+│       ├── nudge-build-not-solve.sh          # Nudge: build agents, don't solve directly
 │       ├── session-start-memory.sh           # Cross-session memory injection
 │       └── pre-compact-backup.sh             # Memory persistence before compaction
 ├── templates/                                # Scaffolding for generated agent files
 ├── reference/                                # Failure taxonomy, knowledge architecture
+├── scripts/
+│   ├── make-launcher.sh                      # Build a macOS Dock launcher (.app)
+│   └── gen-icon.js                           # Dependency-free icon generator (JXA)
 └── generated-agents/                         # Pipeline output
 ```
 
+## Dock Launcher (macOS)
+
+One-click Dock launchers let you start a session without opening a terminal and
+typing. Clicking the app opens your terminal (iTerm2 → Ghostty → Terminal.app,
+auto-detected), `cd`s into the project, and runs your chosen command.
+
+Build one for agentspawn itself:
+
+```bash
+scripts/make-launcher.sh AgentSpawn "$(pwd)"
+```
+
+It prompts for the launch command (`claude`, `claude --dangerously-skip-permissions`,
+your `yolo` alias if detected, or a custom command), generates a distinct colored
+icon, and writes the `.app` to `~/Applications`. Drag it onto your Dock.
+
+Session defaults (subagent model, auto-compact window, adaptive thinking) are set
+for **every** agentspawn session via `.claude/settings.json` — launcher or plain
+`claude`, every user gets them. Only `--dangerously-skip-permissions` is left as a
+per-launch choice, since bypassing approval prompts should be opt-in.
+
+Every standalone agent built by the pipeline can get its own launcher too — the
+deliver phase offers one automatically. Each agent gets a uniquely colored icon
+derived from its name, so they're easy to tell apart in the Dock.
+
+```bash
+# Generate manually for any directory:
+scripts/make-launcher.sh --cmd yolo --icon-text MA "My Agent" /path/to/agent
+```
+
+No external tools required (icons are rendered via macOS's built-in JXA/Cocoa
+bridge — no ImageMagick or Pillow).
+
+## Troubleshooting: ask Claude Code to fix it
+
+agentspawn is just markdown and shell scripts running **inside Claude Code** — and
+Claude Code can read and edit every one of those files. So when something goes
+wrong, the fastest fix is usually to describe the problem in the same session and
+let it diagnose and repair itself. It can read its own skills, hooks, and scripts,
+reason about the failure, and patch the offending file.
+
+Paste the exact error or behavior and ask. For example:
+
+- **A gate blocks you unexpectedly** — _"The design gate won't let me build even
+  though `design-brief.md` exists. Read `.claude/hooks/require-design-brief.sh` and
+  tell me why, then fix it."_
+- **The Dock launcher misbehaves** — _"AgentSpawn.app opens the wrong terminal /
+  doesn't run my command. Check `scripts/make-launcher.sh` and fix the detection."_
+- **A generated agent gives weak output** — _"The agent you built returns generic
+  results. Diagnose which phase caused it and fix that phase."_
+- **A skill or hook errors out** — paste the error text and ask it to find the
+  cause. Shell hooks print to stderr; copy that line in verbatim.
+- **A web-research step keeps failing** — _"Research can't load this page. Confirm
+  Playwright MCP is installed and fall back to it."_
+
+For problems with **Claude Code itself** (install, login, missing tools), run
+`claude doctor` for a diagnostic, and see the official
+[install & login troubleshooting guide](https://code.claude.com/docs/en/troubleshoot-install).
+
+If a fix turns out to be a recurring pattern rather than a one-off, ask Claude Code
+to fold it into the relevant skill, hook, or `CLAUDE.md` so it doesn't happen again
+— the same maintenance loop the pipeline uses for the agents it builds.
+
 ## Requirements
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+| Component | Status | Purpose |
+|---|---|---|
+| [Claude Code](https://code.claude.com/docs/en/setup) | Required | agentspawn runs inside it ([install options](#install-claude-code)) |
+| [Playwright MCP](https://github.com/microsoft/playwright-mcp) | Recommended | Browser tools for agents and research |
+| macOS | Optional | Dock launcher only |
+
+See [Setup](#setup) for install commands.
 
 ## License
 

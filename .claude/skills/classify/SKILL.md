@@ -7,6 +7,16 @@ description: Classify an agent by type and complexity tier. Use at the start of 
 
 Determine the agent type and complexity tier before any other work begins. This classification drives every downstream decision.
 
+## First: reframe the request as an agent to build
+
+Any incoming problem, task, or goal is a request to **build an agent** for that
+class of problem — not a task for you to perform (see the Prime Directive in
+CLAUDE.md). Before classifying, restate the request in agent terms to confirm the
+framing, e.g. "Got it — you want an agent that [does X repeatably]." Then classify.
+
+Never research the domain or start solving the user's problem here. Classification
+is about the *agent*, not about answering the underlying question.
+
 ## Agent Type
 
 Identify the dominant mode. If the agent spans modes, note the primary and secondary.

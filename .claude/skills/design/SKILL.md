@@ -72,6 +72,12 @@ Every filename should answer a retrieval question. Every file starts with a one-
 | Clear rule-based decision | Yes — encode as script/tree | — |
 | Judgment under ambiguity | — | Yes — with calibrated strategy |
 
+**Web data:** If the agent reads live web pages, give it **Playwright MCP**
+access and specify the `WebFetch` → browser fallback in its CLAUDE.md (see the
+research skill's Fetch Strategy). `WebFetch` alone fails on bot-protected,
+JS-rendered, or cookie-walled sites — Playwright is the recommended default for
+any research-capable agent.
+
 ## 5. Ambiguity Resolution
 
 Define how the agent handles incomplete information, calibrated to its risk profile:

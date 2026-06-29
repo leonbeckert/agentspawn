@@ -25,7 +25,9 @@ cd agentspawn
 claude
 ```
 
-No dependencies to install. The project runs entirely inside Claude Code.
+The project runs entirely inside Claude Code — no build step. For the full
+prerequisite list (Claude Code CLI, and the recommended Playwright MCP for
+web-capable agents), see [Setup in the README](README.md#setup).
 
 ## Project Structure
 
@@ -37,6 +39,7 @@ No dependencies to install. The project runs entirely inside Claude Code.
 | `.claude/hooks/` | Gate enforcement scripts | Changing what gets blocked and when |
 | `templates/` | Scaffolding for generated agents | Changing output structure |
 | `reference/` | Failure taxonomy, knowledge architecture | Adding failure classes or knowledge patterns |
+| `scripts/` | Dock launcher generator + icon tooling (macOS) | Changing launcher behavior or icon generation |
 
 ## Making Changes
 

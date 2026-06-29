@@ -127,6 +127,31 @@ cd [agent-name] && claude
 See MAINTENANCE.md for review cadence and troubleshooting.
 ```
 
+## Offer a Dock Launcher (Standalone + macOS only)
+
+For **standalone** agents on macOS, offer a one-click Dock launcher so the user
+can start the agent's session without typing. Ask whether they want one, and
+which command it should run (`claude`, or their `yolo`/skip-permissions alias).
+
+When they say yes, run the generator from the agentspawn repo root:
+
+```bash
+scripts/make-launcher.sh --cmd "<command>" "<AppName>" "<absolute-agent-dir>"
+```
+
+- `<AppName>` — a Title-Case name (e.g. the agent's display name). This is what
+  shows in the Dock.
+- `<absolute-agent-dir>` — the full path to `generated-agents/[agent-name]/`.
+- `--cmd` — what to run after `cd`. Omit it to let the script prompt; pass
+  `claude` or `yolo` directly when the user already told you.
+
+The script auto-detects the terminal (iTerm2 → Ghostty → Terminal.app),
+generates a distinct colored icon from the agent's initials, and writes the
+`.app` to `~/Applications`. Tell the user to drag it onto their Dock and to
+click "OK" on the first-run automation prompt.
+
+Skip this on non-macOS, for non-standalone targets, or if the user declines.
+
 ## After Delivery
 
 Tell the user based on deployment target:
@@ -134,6 +159,7 @@ Tell the user based on deployment target:
 **Standalone:**
 - The agent directory is self-contained and can be moved anywhere
 - `cd [path] && claude` to start using it
+- On macOS, a Dock launcher can be generated (see "Offer a Dock Launcher" above)
 - Review MAINTENANCE.md for ongoing care
 
 **Project subagent:**

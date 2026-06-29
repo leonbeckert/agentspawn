@@ -29,6 +29,23 @@ Use the **researcher subagent** for parallel investigation. Launch separate rese
 - The domain is so specialized that public sources are noise
 - The user has already provided comprehensive input
 
+## Fetch Strategy (web research)
+
+When gathering live web data, during this phase or in any generated agent that
+reads the web:
+
+1. Try `WebFetch` first — fast and cheap.
+2. If a page is blocked (bot protection, JS rendering, cookie wall, login),
+   switch to **Playwright MCP** (`mcp__playwright__browser_navigate` +
+   `browser_snapshot`). Dismiss cookie banners with `browser_click`, then
+   snapshot again.
+3. If Playwright isn't installed, note the gap — don't fabricate. Recommend the
+   user install it (see README → Setup) for sites that block plain fetches.
+
+Any **generated agent** that consumes live web data should be designed to use
+this same fallback: grant it Playwright access and state the WebFetch → browser
+escalation in its CLAUDE.md so it has the best tools available at runtime.
+
 ## Private Context Ingestion
 
 For agents that rely on private documents:

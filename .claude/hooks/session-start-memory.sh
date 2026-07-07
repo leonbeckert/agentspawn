@@ -5,6 +5,12 @@
 MEMORY_FILE="$CLAUDE_PROJECT_DIR/.claude/memory/MEMORY.md"
 SESSIONS_DIR="$CLAUDE_PROJECT_DIR/.claude/memory/sessions"
 
+# Fresh clone: bootstrap personal memory from the tracked template.
+# MEMORY.md itself is gitignored — memory content never gets published.
+if [[ ! -f "$MEMORY_FILE" && -f "$MEMORY_FILE.template" ]]; then
+  cp "$MEMORY_FILE.template" "$MEMORY_FILE"
+fi
+
 # If no memory file exists yet, nothing to inject
 if [[ ! -f "$MEMORY_FILE" ]]; then
   exit 0

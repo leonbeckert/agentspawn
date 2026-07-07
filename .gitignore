@@ -1,15 +1,30 @@
-# Generated agents (each user creates their own)
-generated-agents/*/
-!generated-agents/.gitkeep
+# Generated agents (each user creates their own; the directory may be its own git repo)
+generated-agents/
+
+# Personal memory content — never publish. Only the template and directory
+# structure are tracked; everything the memory system writes stays local.
+.claude/memory/*
+!.claude/memory/MEMORY.md.template
+!.claude/memory/sessions
+.claude/memory/sessions/*
+!.claude/memory/sessions/.gitkeep
+!.claude/memory/topics
+.claude/memory/topics/*
+!.claude/memory/topics/.gitkeep
 
 # Agent memory (personal, created during use)
 .claude/agent-memory/
 
-# Session memory content (personal, created during use)
-.claude/memory/sessions/*.md
-!.claude/memory/sessions/.gitkeep
-.claude/memory/topics/*.md
-!.claude/memory/topics/.gitkeep
+# Personal instruction-audit log (written by /optimize-instructions)
+.claude/instruction-changelog.md
+
+# Local scratch — session artifacts that don't belong to this project
+.playwright-mcp/
+/prototype/
+/klangkuenstler-tracks/
+/ig-*.json
+/ig-*.md
+/*.png
 
 # OS
 .DS_Store

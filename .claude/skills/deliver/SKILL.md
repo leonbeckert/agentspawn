@@ -67,7 +67,7 @@ What needs periodic review and when (link to MAINTENANCE.md).
 
 ## Generate MAINTENANCE.md
 
-Write `generated-agents/[agent-name]/MAINTENANCE.md` using `templates/maintenance.md` as a starting point. Customize the review cadence and observability signals to this specific agent.
+Write `generated-agents/[agent-name]/MAINTENANCE.md` using `templates/maintenance.md` (agentspawn repo root, not this skill's directory) as a starting point. Customize the review cadence and observability signals to this specific agent.
 
 Must include:
 

@@ -23,6 +23,13 @@ if [[ "$(basename "$FILE_PATH")" == "design-brief.md" ]]; then
   exit 0
 fi
 
+# Allow research-phase artifacts before the brief exists — research precedes design
+# in the phase order. Without this, research agents fall back to Bash writes,
+# which normalizes bypassing this very hook (observed 4x on 2026-07-06).
+if [[ "$FILE_PATH" == *"generated-agents/"*"/research/"* ]]; then
+  exit 0
+fi
+
 # Allow writing evals/test-cases.md (evals can be written alongside design)
 if [[ "$(basename "$FILE_PATH")" == "test-cases.md" ]] && [[ "$FILE_PATH" == *"/evals/"* ]]; then
   exit 0

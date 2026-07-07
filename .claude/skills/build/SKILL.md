@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 Write the agent files. This skill requires manual invocation because building should only happen after the user approves the design brief.
 
-**Before starting:** Read the design brief to confirm it exists and review the approved plan. Check the **Deployment Target** section to determine which output format to use. Read templates from `templates/` for scaffolding. Create a `.building` marker file in `generated-agents/[agent-name]/` (write the agent name as its content). This marker scopes the design gate for subagent deployments. Remove it when the build phase completes.
+**Before starting:** Read the design brief to confirm it exists and review the approved plan. Check the **Deployment Target** section to determine which output format to use. Read templates from the agentspawn repo-root `templates/` directory (they are NOT inside this skill's directory — a 2026-07-06 build missed them for exactly that reason). Create a `.building` marker file in `generated-agents/[agent-name]/` (write the agent name as its content). This marker scopes the design gate for subagent deployments. Remove it when the build phase completes.
 
 ## Deployment Targets
 
@@ -214,7 +214,7 @@ Write to user-level directories:
 
 ## Writing the System Prompt (CLAUDE.md or Subagent Body)
 
-Read `templates/claude-md.md` for the template structure.
+Read `templates/claude-md.md` (agentspawn repo root, NOT the skill directory) for the template structure.
 
 **Line budget:** Tier 1: 30-60, Tier 2: 80-120, Tier 3: 80-150. A more serious agent does NOT mean a longer system prompt — manage risk through tighter skills, stronger evals, validators, and narrower scope.
 
@@ -244,7 +244,7 @@ For project subagents: prefix files with the agent name (e.g., `docs/[agent-name
 
 ## Writing Skills
 
-Read `templates/skill.md` for the template structure.
+Read `templates/skill.md` (repo root) for the template structure.
 
 **Per skill:**
 - Separate "from the user" inputs from "from project files" inputs explicitly
@@ -257,7 +257,7 @@ For project/user-level subagents: prefix skill directory names with `[agent-name
 
 ## Writing Evals
 
-Read `templates/eval-suite.md` for the template structure.
+Read `templates/eval-suite.md` (repo root) for the template structure.
 
 **Evaluation model: hard gates + scored dimensions.**
 

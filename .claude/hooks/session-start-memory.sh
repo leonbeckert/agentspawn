@@ -15,8 +15,13 @@ if grep -q "(none" "$MEMORY_FILE" && ! ls "$SESSIONS_DIR"/*.md &>/dev/null; then
   exit 0
 fi
 
-# Read the memory index (capped at 200 lines)
-MEMORY=$(head -200 "$MEMORY_FILE")
+# Read the memory index (capped at 200 lines AND 32KB — a single 28KB line once
+# pushed 58KB into every session; a line cap alone cannot prevent that)
+MEMORY=$(head -200 "$MEMORY_FILE" | head -c 32768)
+if [[ $(head -200 "$MEMORY_FILE" | wc -c) -gt 32768 ]]; then
+  MEMORY="$MEMORY
+[MEMORY.md injection truncated at 32KB — prune it per its consolidation rules (move threads to topics/).]"
+fi
 
 # Get the 3 most recent session summary filenames for awareness
 RECENT_FILES=""

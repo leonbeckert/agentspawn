@@ -68,6 +68,18 @@ Do NOT patch. Diagnose:
 
 Fix the root cause in the responsible phase, rebuild forward, and re-validate.
 
+## Structural Validation (run BEFORE content validation)
+
+These checks verify the agent will actually work when invoked. Content quality is irrelevant if the agent can't load its skills.
+
+- [ ] **Skills discoverable:** Every skill in `.claude/settings.json` points to a file that exists AND follows the `<dir>/SKILL.md` pattern (not flat `.md` files)
+- [ ] **Skill paths resolve:** For each `"path"` in settings.json skills, verify the file exists at that path relative to the agent root
+- [ ] **Output directories:** If any skill writes to an `output/` directory, verify the directory exists or the skill uses a tool that auto-creates it
+- [ ] **Cross-references valid:** If CLAUDE.md or skills reference `docs/foo.md`, verify `docs/foo.md` exists
+- [ ] **Permissions match tools:** If a skill uses `python3`, verify `Bash(python3:*)` is in permissions. If a skill writes files, verify `Write` or `Edit` is allowed.
+
+**Any structural failure = no-ship.** These are silent failures — the agent appears to work but skills don't load, paths 404, or permissions block.
+
 ## Validation Checklist
 
 - [ ] Top 3 failure modes are addressed by prompt, template, example, or eval

@@ -72,11 +72,14 @@ Every filename should answer a retrieval question. Every file starts with a one-
 | Clear rule-based decision | Yes — encode as script/tree | — |
 | Judgment under ambiguity | — | Yes — with calibrated strategy |
 
-**Web data:** If the agent reads live web pages, give it **Playwright MCP**
-access and specify the `WebFetch` → browser fallback in its CLAUDE.md (see the
-research skill's Fetch Strategy). `WebFetch` alone fails on bot-protected,
-JS-rendered, or cookie-walled sites — Playwright is the recommended default for
-any research-capable agent.
+**Web data:** If the agent reads live web pages, specify the fetch ladder from
+the research skill's Fetch Strategy in its CLAUDE.md: `WebFetch` → stateless
+per-invocation browser script (adapt `scripts/webrender.py`) → Playwright MCP
+only for interactive flows, serialized. `WebFetch` alone fails on
+bot-protected, JS-rendered, or cookie-walled sites. Never hand a **shared**
+MCP browser to an agent that fans out parallel subagents — the MCP browser is
+a session-wide singleton and concurrent users silently read each other's
+pages (observed 2026-08-26).
 
 ## 5. Ambiguity Resolution
 

@@ -16,6 +16,49 @@ Use the **researcher subagent** for parallel investigation. Launch separate rese
 - Legal/regulatory context
 - The user's existing public presence
 
+### Report handoff is file-based
+
+Researchers hand over their work as files, not chat text — a background
+agent's final message gets truncated to a status line far too easily
+(rate limits, turn budget; observed 3x on 2026-08-27):
+
+1. Before launching, create `generated-agents/[agent-name]/research/`.
+2. Give every researcher an **explicit absolute report path** in its task
+   prompt, e.g. `.../research/de-vs-en-markt.md`. One file per researcher.
+3. Researchers write incrementally; a `SubagentStop` hook
+   (`researcher-report-gate.py`) blocks them from finishing without a
+   usable report file or full report text.
+4. After completion, **read the report files** — the return message is only
+   path + executive summary. If a researcher died mid-run, its partial file
+   still exists; check it before relaunching the whole task.
+5. Every report ends with a mandatory `## Lücken & Failed Sources` section
+   (sources that failed on rate limits, bot walls, paywalls — with expected
+   relevance and a retry suggestion). Before moving to design, review these
+   sections across all reports: re-fetch the hoch-relevant ones yourself
+   (webrender.py, retry after cooldown, or ask the user for access) or
+   carry them into the design brief as known gaps.
+
+### Fan-out and budget rules (learned 2026-08-28)
+
+- **Researchers work alone — they must not spawn subagents** (frontmatter
+  disallows it). Observed failure: 3 researchers fanned out into 18 agents,
+  exhausted the shared WebSearch pool, stalled 5 delegates on the 600s
+  watchdog, and one orphaned delegate delivered its report into the void
+  because its parent had already finished. Parallelism = more researchers
+  launched by YOU, each with a narrow topic.
+- **WebSearch is one shared pool per session** (default 200; agentspawn
+  sets 500 via `CLAUDE_CODE_MAX_WEB_SEARCHES_PER_SESSION` in settings.json;
+  a capped call silently returns nothing). Launch at most ~4 researchers in
+  parallel and state an explicit search budget in each task prompt (e.g.
+  "max. 25 WebSearch-Aufrufe; danach nur noch direkte WebFetches"). Search
+  discovers sources; fetching primary domains does the actual work.
+- **If a researcher dies or stalls** (watchdog kill, rate limit), its
+  incremental report file survives — read it before relaunching, and
+  relaunch with a narrower remit covering only what's missing.
+- **If a completed agent's report arrives only as message text** (e.g. an
+  orphaned delegate's task notification), persist it into `research/`
+  yourself immediately — notifications are not storage.
+
 ## When to Research Lightly (Operational, Internal-Knowledge)
 
 - Search for established patterns and conventions in the domain
@@ -34,17 +77,27 @@ Use the **researcher subagent** for parallel investigation. Launch separate rese
 When gathering live web data, during this phase or in any generated agent that
 reads the web:
 
-1. Try `WebFetch` first — fast and cheap.
-2. If a page is blocked (bot protection, JS rendering, cookie wall, login),
-   switch to **Playwright MCP** (`mcp__playwright__browser_navigate` +
-   `browser_snapshot`). Dismiss cookie banners with `browser_click`, then
-   snapshot again.
-3. If Playwright isn't installed, note the gap — don't fabricate. Recommend the
-   user install it (see README → Setup) for sites that block plain fetches.
+1. Try `WebFetch` first — fast and cheap. PDFs: WebFetch reports binary
+   content but still saves the file to the session directory — extract with
+   `pdftotext -layout <file> -`.
+2. If a page is blocked (bot protection, JS rendering, cookie wall), use
+   `python3 scripts/webrender.py <URL> --out <dir>` — it launches its **own
+   headless browser per invocation** and prints JSON with the saved file
+   paths. This is the ONLY browser fallback for parallel subagents.
+3. **Playwright MCP** (`mcp__playwright__*`) only for genuinely interactive
+   flows (logins, multi-step clicking) — and only from the main loop, one
+   user at a time. The session browser is a **shared singleton**: parallel
+   agents navigating it replace each other's pages and read wrong content
+   (observed 2026-08-26). A PreToolUse lease hook
+   (`.claude/hooks/playwright-lock.sh`) denies concurrent use; researcher
+   subagents have the MCP disallowed outright.
+4. If every rung fails, note the gap — don't fabricate.
 
-Any **generated agent** that consumes live web data should be designed to use
-this same fallback: grant it Playwright access and state the WebFetch → browser
-escalation in its CLAUDE.md so it has the best tools available at runtime.
+Any **generated agent** that consumes live web data should be designed with
+the same ladder: give it a stateless per-invocation fetcher script (copy or
+adapt `scripts/webrender.py`) rather than a shared MCP browser wherever the
+agent may run work in parallel, and state the WebFetch → script → (serial,
+interactive-only) browser escalation in its CLAUDE.md.
 
 ## Private Context Ingestion
 

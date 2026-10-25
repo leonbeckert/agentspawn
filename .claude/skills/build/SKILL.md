@@ -22,6 +22,8 @@ Write to `generated-agents/[agent-name]/`:
 
 ```
 [agent-name]/
+├── .claude/
+│   └── settings.json      (required — see "Model pinning" below)
 ├── CLAUDE.md
 ├── guide.md               (or docs/ if large)
 ├── skills/
@@ -95,7 +97,7 @@ isolation: [worktree]
 |---|---|---|
 | `tools` | When the agent should NOT have full tool access | Allowlist. Omit to inherit all tools from parent |
 | `disallowedTools` | When you need to block specific tools | Denylist. Prefer over `tools` when blocking only a few |
-| `model` | When the agent needs a specific model | `sonnet` for speed/cost, `opus` for complex reasoning, `haiku` for fast read-only. Default: `inherit` |
+| `model` | Always, unless the design brief justifies otherwise | Write the `opus` alias, not a full id like `claude-opus-5-5`. The alias always resolves to the newest Opus, so pins never go stale. Opus-only policy applies to nested subagents too |
 | `skills` | When the agent has namespaced skills | Full skill content is injected at startup. Subagents don't inherit parent skills |
 | `memory` | When the agent should learn across sessions | `project` for codebase-specific, `user` for cross-project. Creates persistent memory directory |
 | `permissionMode` | When the agent needs different permission behavior | `dontAsk` for autonomous agents, `acceptEdits` for edit-heavy agents, `plan` for read-only |
@@ -211,6 +213,27 @@ Write to user-level directories:
 - Use `memory: user` instead of `memory: project` in the subagent frontmatter
 - Evals are written to `generated-agents/[agent-name]/evals/` (the factory's staging area) since there's no single project to put them in
 - Hooks in frontmatter must reference scripts at absolute paths or paths relative to any project root
+
+## Model Pinning (every deployment target)
+
+Opus-only policy: the agent AND every subagent it spawns run `opus`, the alias for the newest Opus. Two things must be written, because they cover different processes:
+
+**1. `[agent-dir]/.claude/settings.json`** — for standalone and multi-project workspaces, always write this file. Merge into it if it already exists (permissions, hooks):
+
+```json
+{
+  "model": "opus",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+  }
+}
+```
+
+The `env` line is the one that matters and the one that gets forgotten. `model` only sets the main loop; without `CLAUDE_CODE_SUBAGENT_MODEL`, every `Agent`/`Task` call the agent makes falls back to whatever the launching shell exported — which silently pins subagents to an older model no matter what the workspace says. Skills that fan out to `subagent_type: "general-purpose"` are exactly the case that breaks.
+
+Project subagents and user-level agents inherit the host project's settings — write the `env` block into that project's `.claude/settings.json` instead, and say so in the delivery notes.
+
+**2. Explicit `model:` in frontmatter**: write `opus`, never a full id like `claude-opus-5-5`. A full id freezes the agent on one release; the alias follows each new Opus automatically.
 
 ## Writing the System Prompt (CLAUDE.md or Subagent Body)
 

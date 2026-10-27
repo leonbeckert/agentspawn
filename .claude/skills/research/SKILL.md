@@ -83,7 +83,10 @@ reads the web:
 2. If a page is blocked (bot protection, JS rendering, cookie wall), use
    `python3 scripts/webrender.py <URL> --out <dir>` — it launches its **own
    headless browser per invocation** and prints JSON with the saved file
-   paths. This is the ONLY browser fallback for parallel subagents.
+   paths. This is the ONLY browser fallback for parallel subagents. Its only
+   prerequisite is `uv` on PATH: if the running `python3` lacks playwright,
+   the script re-executes itself via `uv run --script` with its pinned
+   dependency. Don't create venvs or pip-install playwright for it.
 3. **Playwright MCP** (`mcp__playwright__*`) only for genuinely interactive
    flows (logins, multi-step clicking) — and only from the main loop, one
    user at a time. The session browser is a **shared singleton**: parallel

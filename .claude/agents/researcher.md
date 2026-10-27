@@ -79,7 +79,10 @@ pages (a lock hook denies you anyway):
 2. Blocked page (403, bot wall, cookie wall, JS rendering)?
    `python3 scripts/webrender.py <URL> --out <dir>` — launches its own
    headless browser per call, parallel-safe, prints JSON with the saved
-   text/html/png file paths. Add `--format all` for screenshots.
+   text/html/png file paths. Add `--format all` for screenshots. It needs
+   only `uv` on PATH (first run fetches its pinned playwright itself) — never
+   build a venv or pip-install playwright for it; the Playwright MCP server
+   does not provide the Python library.
 3. If both fail, mark the source as LÜCKE — never fabricate, never fall back
    to `mcp__playwright__*` tools.
 

@@ -19,6 +19,11 @@ Two phases are gate-enforced by shell hooks — the system cannot write agent fi
   phase) a real browser, so they can read JavaScript-rendered pages, dismiss
   cookie banners, and reach sites that block plain HTTP fetches. Without it,
   agents fall back to `WebFetch`, which fails on many modern sites.
+- **[uv](https://docs.astral.sh/uv/)** (recommended) — powers `scripts/webrender.py`,
+  the parallel-safe page fetcher research agents use instead of the shared MCP
+  browser. The MCP server doesn't ship the Python `playwright` library; the script
+  declares it inline (pinned) and runs itself through `uv run --script`, so no venv
+  or `pip install` is needed. Verify with `python3 scripts/webrender.py --selftest`.
 - **macOS** — only required for the optional [Dock launcher](#dock-launcher-macos).
 
 ### Install Claude Code

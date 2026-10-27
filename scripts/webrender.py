@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["playwright==1.64.1"]
+# ///
 """Stateless, parallel-safe page fetcher for research agents.
 
 Each invocation launches its OWN headless Chromium, renders one URL, writes
@@ -14,15 +18,58 @@ Usage:
   python3 scripts/webrender.py --selftest
 
 Exit codes: 0 ok · 2 fetch/render failed (JSON error on stdout) · 3 bad usage.
+
+Dependencies: the Playwright MCP server does NOT provide the Python library,
+and agents call this with whatever `python3` is on PATH. If `playwright` isn't
+importable, the script re-executes itself via `uv run --script`, which builds a
+cached environment from the inline metadata above (pinned so the version
+matches the Chromium build in the shared ms-playwright cache). A missing
+Chromium is installed once on first launch failure.
 """
 
 import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
+
+BOOTSTRAP_ENV = "WEBRENDER_UV_BOOTSTRAPPED"
+
+
+def ensure_playwright() -> None:
+    """Re-exec under uv when the current interpreter lacks playwright."""
+    try:
+        import playwright  # noqa: F401
+        return
+    except ImportError:
+        pass
+    uv = shutil.which("uv") or next(
+        (p for p in (os.path.expanduser("~/.local/bin/uv"), "/opt/homebrew/bin/uv")
+         if os.access(p, os.X_OK)), None)
+    if uv and not os.environ.get(BOOTSTRAP_ENV):
+        os.environ[BOOTSTRAP_ENV] = "1"
+        os.execv(uv, [uv, "run", "--quiet", "--script", os.path.abspath(__file__), *sys.argv[1:]])
+    hint = ("install uv (https://docs.astral.sh/uv/) or run with a Python that has "
+            "playwright==1.64.1" if not uv else "uv could not provide playwright")
+    print(json.dumps({"ok": False, "error": f"python playwright unavailable: {hint}"},
+                     ensure_ascii=False, indent=2))
+    sys.exit(2)
+
+
+def launch_chromium(p):
+    """Launch headless Chromium, installing the pinned build once if it's missing."""
+    try:
+        return p.chromium.launch(headless=True)
+    except Exception as e:
+        if "Executable doesn't exist" not in str(e):
+            raise
+    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium", "--only-shell"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    return p.chromium.launch(headless=True)
 
 CONSENT_PATTERNS = re.compile(
     r"^(alle akzeptieren|akzeptieren|zustimmen|einverstanden|alles akzeptieren"
@@ -71,7 +118,7 @@ def fetch(url, out_dir, formats, timeout_s, wait_until, cookie_dismiss):
     result = {"url": url, "ok": False, "files": {}}
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = launch_chromium(p)
         context = browser.new_context(user_agent=UA, locale="de-DE", viewport={"width": 1440, "height": 2000})
         page = context.new_page()
         try:
@@ -145,8 +192,6 @@ def fetch(url, out_dir, formats, timeout_s, wait_until, cookie_dismiss):
 
 
 def selftest() -> int:
-    import subprocess
-
     me = os.path.abspath(__file__)
     tmp = tempfile.mkdtemp(prefix="webrender-selftest-")
     failures = []
@@ -201,6 +246,7 @@ def main():
     ap.add_argument("--no-cookie-dismiss", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
+    ensure_playwright()
 
     if args.selftest:
         sys.exit(selftest())
